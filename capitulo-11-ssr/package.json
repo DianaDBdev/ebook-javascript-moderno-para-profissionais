@@ -1,0 +1,8 @@
+{
+  "name": "cap11-ssr",
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

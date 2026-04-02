@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    // ──────────────────────────────────────────────
+    // Target e módulos
+    // ──────────────────────────────────────────────
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",   // melhor compatibilidade com Vite/Rolldown
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+
+    // ──────────────────────────────────────────────
+    // Rigor de tipos — ative e nunca desative
+    // ──────────────────────────────────────────────
+    "strict": true,                  // ativa todos os checks abaixo:
+    "noImplicitAny": true,           // proíbe 'any' implícito
+    "strictNullChecks": true,        // null e undefined não são assignáveis a tudo
+    "noUncheckedIndexedAccess": true,// arr[i] pode ser undefined
+
+    // ──────────────────────────────────────────────
+    // Qualidade de código
+    // ──────────────────────────────────────────────
+    "noUnusedLocals": true,          // erro em variáveis não usadas
+    "noUnusedParameters": true,      // erro em parâmetros não usados
+    "noFallthroughCasesInSwitch": true,
+
+    // ──────────────────────────────────────────────
+    // Output
+    // ──────────────────────────────────────────────
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,             // gera .d.ts (necessário para bibliotecas)
+    "sourceMap": true,
+
+    // ──────────────────────────────────────────────
+    // Aliases (combina com vite.config.js)
+    // ──────────────────────────────────────────────
+    "baseUrl": ".",
+    "paths": {
+      "@/*":           ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@hooks/*":      ["./src/hooks/*"],
+      "@utils/*":      ["./src/utils/*"]
+    },
+
+    // ──────────────────────────────────────────────
+    // Interoperabilidade
+    // ──────────────────────────────────────────────
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,         // compatível com Vite/esbuild
+    "skipLibCheck": true             // não verifica tipos em node_modules
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+}

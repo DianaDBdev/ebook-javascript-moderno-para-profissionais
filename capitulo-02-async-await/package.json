@@ -1,0 +1,7 @@
+{
+  "name": "cap02-async-await",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Exemplos do Capítulo 2 — Async/Await",
+  "engines": { "node": ">=18.0.0" }
+}

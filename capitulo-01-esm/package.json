@@ -1,0 +1,9 @@
+{
+  "name": "cap01-esm",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Exemplos do Capítulo 1 — ESM",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
