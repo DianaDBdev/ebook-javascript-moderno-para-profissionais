@@ -1,61 +1,124 @@
-// optional-chaining.js — ?. e ?? na prática
-// Execute: node 03-optional-chaining/optional-chaining.js
+// optional-chaining.js — Seções 3.3: Optional chaining (?.) e nullish coalescing (??)
+// Capítulo 3 — Novas Features do ES2015–ES2025
+//
+// Execute: node exemplos/optional-chaining.js
 
-// ──────────────────────────────────────────────
-// Optional chaining (?.)
-// ──────────────────────────────────────────────
-const usuario = {
-  nome: 'Diana',
-  endereco: {
-    cidade: 'Belém',
-    bairro: null,
-  },
-  // pagamento não existe
-};
+// ─────────────────────────────────────────────────────────────
+// 1. Optional chaining (?.)
+// ─────────────────────────────────────────────────────────────
 
-// ❌ Sem optional chaining — TypeError se propriedade não existir
-// console.log(usuario.pagamento.cartao.numero); // CRASH
+const user = { name: 'João' }; // sem address
 
-// ✅ Com optional chaining — retorna undefined sem quebrar
-console.log(usuario.endereco?.cidade);           // 'Belém'
-console.log(usuario.endereco?.cep);              // undefined
-console.log(usuario.pagamento?.cartao?.numero);  // undefined (sem crash)
-console.log(usuario.endereco?.bairro?.trim());   // undefined (bairro é null)
+// ❌ Sem optional chaining — quebra
+// console.log(user.address.street);
+// 💥 TypeError: Cannot read property 'street' of undefined
 
-// ──────────────────────────────────────────────
-// Nullish coalescing (??)
-// ──────────────────────────────────────────────
-// ?? — retorna o lado direito apenas quando o esquerdo é null ou undefined
-// || — retorna o lado direito para qualquer valor falsy (0, '', false)
+// ❌ Código defensivo verboso (3 checks)
+// if (user && user.address && user.address.street) {
+//   console.log(user.address.street);
+// }
 
-const config = { timeout: 0, nome: '', ativo: false };
+// ✅ Com optional chaining — uma linha
+console.log(user?.address?.street); // undefined (não quebra!)
 
-// ❌ Problema com || — sobrescreve valores válidos como 0 e ''
-console.log(config.timeout || 5000);  // 5000 ← ERRADO: 0 é válido!
-console.log(config.nome    || 'anon');// 'anon' ← ERRADO: '' pode ser intencional
+// Como funciona:
+//   • Se user é null/undefined → retorna undefined e para
+//   • Se user.address é null/undefined → retorna undefined e para
+//   • Se user.address.street existe → retorna o valor
 
-// ✅ ?? respeita 0, false e ''
-console.log(config.timeout ?? 5000);  // 0     ← CORRETO
-console.log(config.nome    ?? 'anon');// ''    ← CORRETO
-console.log(config.ativo   ?? true);  // false ← CORRETO
-console.log(config.limite  ?? 100);   // 100   ← usa padrão pois é undefined
+// Em chamadas de função:
+const userWithMethod = { name: 'Ana' }; // sem getAddress
+console.log(userWithMethod.getAddress?.()); // undefined (não quebra)
 
-// ──────────────────────────────────────────────
-// Combinando ?. com ??
-// ──────────────────────────────────────────────
-const cidade = usuario.endereco?.cidade ?? 'Cidade não informada';
-console.log(cidade); // 'Belém'
+// Em arrays:
+const users = [{ name: 'Maria' }, { name: 'João' }];
+console.log(users?.[0]?.name);  // 'Maria'
+console.log(users?.[10]?.name); // undefined
 
-const cep = usuario.endereco?.cep ?? 'CEP não cadastrado';
-console.log(cep);    // 'CEP não cadastrado'
+// ─────────────────────────────────────────────────────────────
+// 2. Nullish coalescing (??)
+// ─────────────────────────────────────────────────────────────
 
-// ──────────────────────────────────────────────
-// Optional chaining em métodos e arrays
-// ──────────────────────────────────────────────
-const obj = { saudar: () => 'Olá!' };
-console.log(obj.saudar?.());     // 'Olá!'
-console.log(obj.despedir?.());   // undefined (sem crash)
+// O problema com ||:
+const userFalsy = { name: '', age: 0, isActive: false };
 
-const arr = [1, 2, 3];
-console.log(arr?.[0]);           // 1
-console.log(null?.[0]);          // undefined
+// ❌ || considera '', 0 e false como falsy
+const nameBad     = userFalsy.name     || 'Guest'; // 'Guest' — mas name é '' (válido!)
+const ageBad      = userFalsy.age      || 18;      // 18      — mas age é 0 (válido!)
+console.log('|| (errado):', nameBad, ageBad);
+
+// ✅ ?? só considera null e undefined como ausência de valor
+const name     = userFalsy.name     ?? 'Guest'; // '' (preserva string vazia)
+const age      = userFalsy.age      ?? 18;      // 0  (preserva zero)
+const isActive = userFalsy.isActive ?? true;    // false (preserva false)
+console.log('?? (correto):', name, age, isActive);
+
+// Quando usar cada um:
+// Use || quando quiser fallback para QUALQUER valor falsy
+const port  = process.env.PORT || 3000; // '' → 3000, 0 → 3000
+// Use ?? quando quiser fallback APENAS para null/undefined
+const query = { limit: 0 };
+const limit = query.limit ?? 10; // 0 → 0 (zero é válido como limite)
+console.log('limit:', limit); // 0
+
+// ─────────────────────────────────────────────────────────────
+// 3. Nullish coalescing assignment (??=)
+// ─────────────────────────────────────────────────────────────
+
+let cfg = { timeout: null };
+
+// ❌ Antes
+// if (cfg.timeout === null || cfg.timeout === undefined) { cfg.timeout = 5000; }
+
+// ✅ Depois
+cfg.timeout ??= 5000; // Só atribui se for null/undefined
+console.log(cfg.timeout); // 5000
+
+cfg.timeout ??= 3000; // Não muda (já é 5000)
+console.log(cfg.timeout); // 5000
+
+// Lazy initialization com ??=:
+class UserService {
+  #cache;
+  getCache() {
+    this.#cache ??= new Map(); // Cria apenas na primeira chamada
+    return this.#cache;
+  }
+}
+const svc = new UserService();
+console.log(svc.getCache() === svc.getCache()); // true — mesma instância
+
+// ─────────────────────────────────────────────────────────────
+// 4. Combinações poderosas: ?. + ??
+// ─────────────────────────────────────────────────────────────
+
+// Resposta de API que pode falhar
+const response = { data: { user: { profile: null } } };
+const userName = response?.data?.user?.profile?.name ?? 'Guest';
+console.log(userName); // 'Guest'
+
+// Configuração aninhada com fallback
+const config = { server: { host: 'localhost' } }; // sem timeout
+const timeout = config?.server?.timeout ?? 5000;
+console.log(timeout); // 5000
+
+// 💡 8 linhas vs 1 linha:
+// const userName =
+//   response && response.data && response.data.user && response.data.user.name
+//     ? response.data.user.name
+//     : 'Guest';
+const userNameVerboso = response?.data?.user?.name ?? 'Guest';
+console.log(userNameVerboso); // 'Guest'
+
+// ─────────────────────────────────────────────────────────────
+// 5. Cheat sheet (seção final do capítulo)
+// ─────────────────────────────────────────────────────────────
+
+const input = null;
+const defaultValue = 'padrão';
+const value = input ?? defaultValue;
+console.log(value); // 'padrão'
+
+// array?.[0]
+const emptyArr = null;
+console.log(emptyArr?.[0]); // undefined
