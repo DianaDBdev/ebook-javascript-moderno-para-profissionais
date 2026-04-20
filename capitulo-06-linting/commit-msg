@@ -1,0 +1,8 @@
+#!/bin/sh
+# .husky/commit-msg — Seção 6.3: Validação de mensagem de commit
+# Valida que a mensagem segue o padrão Conventional Commits.
+# Exemplos válidos:
+#   feat(auth): add JWT refresh token support
+#   fix(api): handle null response
+#   chore(deps): update eslint to v9
+npx --no -- commitlint --edit $1

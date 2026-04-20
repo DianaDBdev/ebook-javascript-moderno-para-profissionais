@@ -1,0 +1,38 @@
+# .github/workflows/quality.yml — Seção 6.4: CI Quality Gate
+# Capítulo 6 — Linting, Formatting e Code Quality
+#
+# Bloqueia merges com problemas de tipo, lint ou formatação.
+# Roda em pushes para main/develop e em pull requests.
+
+name: Code Quality
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Tests
+        run: npm run test

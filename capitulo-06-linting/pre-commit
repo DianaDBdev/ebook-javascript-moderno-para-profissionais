@@ -1,0 +1,5 @@
+#!/bin/sh
+# .husky/pre-commit — Seção 6.3: Husky + lint-staged
+# Executa lint-staged nos arquivos staged antes de cada commit.
+# Apenas os arquivos alterados são verificados — rápido em repos grandes.
+npx lint-staged
