@@ -1,0 +1,60 @@
+# deploy-staging.yml — Seção 12.3: Deploy automático para staging
+# Capítulo 12 — Deploy Moderno
+#
+# Dispara automaticamente ao merge em main.
+# Deploy para Fly.io + smoke test + notificação Slack.
+
+name: Deploy Staging
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci && npm run build
+
+      # Deploy para Fly.io
+      # prefira versão fixada (ex: @v0.4.x) em produção
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy API to Fly.io
+        run: flyctl deploy --app myapp-staging --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      # Rodar migrations automaticamente após deploy
+      - name: Run DB migrations
+        run: flyctl ssh console --app myapp-staging -C 'npm run db:migrate'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      # Smoke test — verificar que a API responde
+      - name: Smoke test
+        run: |
+          sleep 15
+          curl -f ${{ secrets.STAGING_URL }}/health || exit 1
+
+      # Notificar Slack (sempre — sucesso ou falha)
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "Deploy staging: ${{ job.status }} — ${{ github.sha }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

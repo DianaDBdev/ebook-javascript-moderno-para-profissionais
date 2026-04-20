@@ -1,0 +1,75 @@
+# deploy-prod.yml — Seção 12.3: Deploy para produção com aprovação manual
+# Capítulo 12 — Deploy Moderno
+#
+# Trigger: tag v*.*.* ou workflow_dispatch (manual).
+# Requer aprovação em Settings → Environments → production → Required reviewers.
+
+name: Deploy Production
+
+on:
+  push:
+    tags: ['v*.*.*']      # Trigger em tags de versão
+  workflow_dispatch:       # Ou trigger manual
+    inputs:
+      version:
+        description: 'Version to deploy (ex: v1.2.3)'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url:  https://myapp.com
+    # 'environment: production' exige aprovação manual no GitHub
+    # Configure em: Settings → Environments → production → Required reviewers
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci && npm run build
+
+      # prefira versão fixada (ex: @v0.4.x) em produção
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # Rolling update — zero downtime
+      - name: Deploy
+        run: flyctl deploy --app myapp-prod --strategy rolling
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_PROD_TOKEN }}
+
+      # Migrations com lock — evita conflito em múltiplas instâncias
+      - name: Run DB migrations
+        run: flyctl ssh console --app myapp-prod -C 'npm run db:migrate'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_PROD_TOKEN }}
+
+      # E2E smoke tests em produção
+      - name: E2E smoke tests
+        run: npx playwright test tests/smoke/
+        env:
+          BASE_URL: https://myapp.com
+
+      # Sucesso — notificar
+      - uses: slackapi/slack-github-action@v1.26.0
+        if: success()
+        with:
+          payload: '{"text": "✅ Deploy ${{ github.ref_name }} em produção"}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+      # Falha — notificar com instrução de rollback
+      - uses: slackapi/slack-github-action@v1.26.0
+        if: failure()
+        with:
+          payload: |
+            {
+              "text": "❌ Deploy falhou — rollback: flyctl releases rollback --app myapp-prod"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

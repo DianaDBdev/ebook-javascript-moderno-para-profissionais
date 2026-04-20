@@ -1,0 +1,87 @@
+# ci.yml — Seção 12.3: Quality Gate em todo Pull Request
+# Capítulo 12 — Deploy Moderno
+#
+# Roda typecheck, lint, format check, testes e build em todo PR.
+# Branch protection: PRs só mergeiam se o CI passar.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+
+    # Banco de dados como service container — testes de integração reais
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB:       testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'           # Cache automático de node_modules
+
+      # Cache do build (Next.js, Turbo etc.)
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+            ~/.npm
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Unit & integration tests
+        run: npm run test:run -- --coverage
+        env:
+          DATABASE_URL: postgres://postgres:test@localhost:5432/testdb
+          NODE_ENV:     test
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Build
+        run: npm run build
+
+      - name: Check bundle size
+        run: npm run size   # size-limit — falha se ultrapassar limite
+
+      - name: E2E tests
+        run: npx playwright test
+        env:
+          BASE_URL: ${{ secrets.STAGING_URL }}
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
