@@ -1,0 +1,14 @@
+{
+  "_comment": "tsconfig para projetos com Vite (seção 5.2) — Vite cuida da transpilação, TS só checa tipos",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}

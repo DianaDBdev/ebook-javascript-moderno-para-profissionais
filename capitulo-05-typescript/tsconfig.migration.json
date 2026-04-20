@@ -1,0 +1,15 @@
+{
+  "_comment": "tsconfig para migração gradual JS→TS (seção 5.6) — começa permissivo",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "allowJs":  true,
+    "checkJs":  false,
+    "strict":   false,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"]
+}
