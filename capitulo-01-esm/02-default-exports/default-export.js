@@ -53,3 +53,32 @@ export default class User {
 const user = new User('Diana', 'diana@db.dev');
 console.log('getDisplayName():', user.getDisplayName());
 console.log('toString()      :', user.toString());
+
+// ─────────────────────────────────────────────────────────────
+// Mixed exports — combinando default e named (seção 1.3)
+// ─────────────────────────────────────────────────────────────
+
+// export default class UserService { ... }
+// export const MAX_USERS = 1000;
+// export function validateUser(user) { ... }
+//
+// Importação combinada:
+// import UserService, { MAX_USERS, validateUser } from './UserService.js';
+//
+// Use com moderação — muitos named exports além do default = sinal para dividir o arquivo.
+
+// ─────────────────────────────────────────────────────────────
+// Barrel File (index.js) — seção 1.3
+// ─────────────────────────────────────────────────────────────
+
+// Barrel files re-exportam tudo de uma pasta, criando ponto de entrada único:
+// // validators/index.js
+// export { validateEmail }    from './email.js';
+// export { validatePassword } from './password.js';
+// export { validatePhone }    from './phone.js';
+//
+// Importação limpa:
+// import { validateEmail, validatePassword } from './validators/index.js';
+//
+// ⚠️ Armadilha: export * from de módulos muito grandes dificulta tree-shaking.
+// Use eslint-plugin-import com no-cycle para detectar dependências circulares.

@@ -195,3 +195,98 @@ console.log('__filename:', __filename);
 
 // Babel — .babelrc:
 // { "presets": [["@babel/preset-env", { "targets": "> 0.25%, not dead" }]] }
+
+// ─────────────────────────────────────────────────────────────
+// Passo 4: Dependências circulares (seção 1.5)
+// ─────────────────────────────────────────────────────────────
+
+// CommonJS esconde dependências circulares — resulta em undefined silencioso.
+// ESM com live bindings resolve a maioria automaticamente SE usar funções:
+//
+// ✅ Funciona com funções (live bindings):
+// // a.js: import { b } from './b.js'; export function a() { return b() + 1; }
+// // b.js: import { a } from './a.js'; export function b() { return 1; }
+//
+// ❌ Falha com valores inicializados no topo:
+// // a.js: import { B } from './b.js'; export const A = B + 1; // B é undefined aqui!
+//
+// Dependências circulares indicam problema de arquitetura.
+// Use ESLint com import/no-cycle para detectá-las.
+// Solução: extrair código compartilhado para um terceiro módulo.
+
+// ─────────────────────────────────────────────────────────────
+// Passo 5: Ferramentas de codemod (seção 1.5)
+// ─────────────────────────────────────────────────────────────
+
+// cjs-to-esm — converte automaticamente a maioria dos casos:
+// npx cjs-to-esm src/
+//
+// jscodeshift — para transformações personalizadas:
+// npx jscodeshift -t ./transform.js src/
+//
+// ⚠️ Nenhuma ferramenta acerta 100% dos casos.
+// Sempre revise o diff, rode os testes. Trate como primeiro passo.
+
+// ─────────────────────────────────────────────────────────────
+// Migração incremental — ordem sugerida (seção 1.5)
+// ─────────────────────────────────────────────────────────────
+
+// Comece pelos módulos sem dependências (utils/, helpers/)
+// Teste a cada módulo migrado. Commits pequenos e frequentes.
+// Ordem sugerida:
+//   utils/       ← Comece aqui (sem dependências internas)
+//   models/
+//   services/
+//   routes/
+//   app.js       ← Final
+
+// ─────────────────────────────────────────────────────────────
+// Seção 1.6: moduleResolution no tsconfig (seção 1.6)
+// ─────────────────────────────────────────────────────────────
+
+// "bundler"   — recomendado para Vite/esbuild. Permite omitir extensões, resolve index.ts.
+// "node16"    — Node.js puro sem bundler. Extensões .js obrigatórias.
+// "nodenext"  — similar a node16, para versões recentes do Node.js.
+// "node"      — legado CommonJS. Evite em projetos novos.
+//
+// Exemplo tsconfig.json:
+// { "compilerOptions": { "module": "ESNext", "moduleResolution": "bundler" } }
+
+// ─────────────────────────────────────────────────────────────
+// Import maps — ESM sem bundler no browser (seção 1.6)
+// ─────────────────────────────────────────────────────────────
+
+// <script type="importmap">
+// {
+//   "imports": {
+//     "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4/lodash.js",
+//     "react":  "https://esm.sh/react@18"
+//   }
+// }
+// </script>
+// <script type="module">
+//   import { debounce } from 'lodash'; // funciona sem bundler!
+// </script>
+// Suportado em todos os browsers modernos desde 2023.
+
+// ─────────────────────────────────────────────────────────────
+// Caso Real — API Express (seção 1.6)
+// ─────────────────────────────────────────────────────────────
+
+// API Express com 40+ arquivos, 3 anos de idade, 10.000+ requisições/dia.
+// Motivos da migração: nanoid/got/chalk só ESM, tree-shaking, onboarding.
+//
+// Semana 1 — Preparação:
+//   Node.js 14 → 20, dependências atualizadas, suite de testes criada
+//
+// Semana 2 — Migração incremental:
+//   Segunda: utils/ e config/
+//   Terça: models/
+//   Quarta: services/
+//   Quinta: routes/ e app.js
+//   Sexta: testes finais e deploy em staging
+//
+// Problema encontrado: dependência circular services/user.js ↔ services/auth.js
+// Solução: extrair código compartilhado para services/base.js
+//
+// Resultado: bundle 35% menor, autocomplete melhorado, onboarding mais rápido

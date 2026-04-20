@@ -99,3 +99,53 @@ async function loadEditor() {
 // ─────────────────────────────────────────────────────────────
 const editor = await loadEditor();
 editor.start();
+
+// ─────────────────────────────────────────────────────────────
+// Error handling em imports dinâmicos (seção 1.4)
+// ─────────────────────────────────────────────────────────────
+
+async function loadModuleWithErrorHandling(path) {
+  try {
+    const module = await import(path);
+    return module;
+  } catch (err) {
+    // Falha se: arquivo não existe, rede falhar, erro de sintaxe
+    console.error(`Falha ao carregar módulo ${path}:`, err.message);
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Atenção com template literals em bundlers (seção 1.4)
+// ─────────────────────────────────────────────────────────────
+
+// ✅ Prefixo fixo — bundler consegue mapear os arquivos:
+// const module = await import(`./features/${name}.js`); // OK com prefixo
+
+// ❌ Variável pura — bundler não consegue analisar estaticamente:
+// const module = await import(variavel); // Bundlers não sabem o que incluir
+
+// ─────────────────────────────────────────────────────────────
+// Nomeando chunks com comentários mágicos (seção 1.4)
+// ─────────────────────────────────────────────────────────────
+
+// const admin = await import(/* webpackChunkName: "admin" */ './admin-panel.js');
+// const report = await import(/* @vite-ignore */ './report.js');
+// Por padrão: 0.js, 1.js — com nome: admin.js → debug e cache busting eficiente
+
+// ─────────────────────────────────────────────────────────────
+// Quando NÃO usar dynamic imports (seção 1.4)
+// ─────────────────────────────────────────────────────────────
+
+// Evite quando:
+// • Módulo é pequeno (< 10 KB) — overhead de nova requisição não compensa
+// • Módulo é usado imediatamente na inicialização — carregue estaticamente
+// • Você está em um loop — sequencializa requisições (use Promise.all)
+//
+// ❌ Nunca faça:
+// for (const item of items) {
+//   await import(...); // Sequencializa — péssima performance
+// }
+//
+// ✅ Faça:
+// await Promise.all(items.map(item => import(`./handlers/${item}.js`)));

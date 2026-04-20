@@ -91,3 +91,74 @@ console.log('API_URL:', API_URL);
 // export function validatePhone(phone) { /* ... */ }
 //
 // A implementação completa com regex está nas funções acima.
+
+// ─────────────────────────────────────────────────────────────
+// Live bindings — seção 1.1: ESM exporta referências vivas
+// ─────────────────────────────────────────────────────────────
+
+// CommonJS exporta CÓPIAS — quem importa não vê atualizações:
+// // counter-cjs.js
+// let count = 0;
+// function increment() { count++; }
+// module.exports = { count, increment };
+// // main-cjs.js
+// const { count, increment } = require('./counter-cjs');
+// increment();
+// console.log(count); // Ainda 0! — recebeu uma cópia
+
+// ESM exporta live bindings — quem importa VÊ as atualizações:
+// // counter-esm.js
+// export let count = 0;
+// export function increment() { count++; }
+// // main-esm.js
+// import { count, increment } from './counter-esm.js';
+// increment();
+// console.log(count); // 1 — referência viva!
+// Live bindings são o que permite tree-shaking confiável.
+
+// ─────────────────────────────────────────────────────────────
+// Três fases do ESM (seção 1.1) — por que é diferente do CJS
+// ─────────────────────────────────────────────────────────────
+
+// Fase 1 — Parsing: motor lê todos imports/exports ANTES de executar
+// Fase 2 — Linking: resolve dependências, cria live bindings
+// Fase 3 — Evaluation: executa módulos na ordem correta
+// CJS executa as três fases juntas, de forma síncrona, a cada require()
+
+// ─────────────────────────────────────────────────────────────
+// Re-exports — compondo módulos (seção 1.2)
+// ─────────────────────────────────────────────────────────────
+
+// Re-exports permitem que um módulo exponha funcionalidades de outros:
+// export { validateEmail }   from './email.js';
+// export { validatePassword } from './password.js';
+// export { validatePhone }    from './phone.js';
+// Base de bibliotecas bem organizadas e barrel files.
+
+// ─────────────────────────────────────────────────────────────
+// Imports de side-effect (seção 1.2)
+// ─────────────────────────────────────────────────────────────
+
+// Módulos que não exportam nada — executam como efeito colateral:
+// import './polyfills.js';     // polyfills
+// import './setup-globals.js'; // configurações globais
+// O bundler nunca elimina esses imports por tree-shaking.
+
+// ─────────────────────────────────────────────────────────────
+// import.meta.glob — lazy loading em massa (Vite, seção 1.2)
+// ─────────────────────────────────────────────────────────────
+
+// const routes = import.meta.glob('./routes/*.js');
+// const modules = import.meta.glob('./features/*.ts', { eager: true });
+// Elimina a necessidade de manter listas de imports manuais.
+
+// ─────────────────────────────────────────────────────────────
+// ESM no navegador sem bundler (seção 1.2)
+// ─────────────────────────────────────────────────────────────
+
+// <script type="module" src="app.js"></script>
+// <script type="module">
+//   import { formatCurrency } from './utils.js';
+//   console.log(formatCurrency(1500));
+// </script>
+// Módulos no browser: strict mode ativo, escopo isolado, defer por padrão, CORS.
