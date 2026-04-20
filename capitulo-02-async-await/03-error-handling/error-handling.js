@@ -204,3 +204,30 @@ console.log('retry resultado:', resultado);
 //       onRetry: (attempt, delay, err) =>
 //         console.log(`Retry ${attempt} após ${delay}ms: ${err.message}`) }
 //   );
+
+// ─────────────────────────────────────────────────────────────
+// Depurando Async/Await (seção 2.6)
+// ─────────────────────────────────────────────────────────────
+
+// Dica 1: console.trace() para ver o stack completo
+// async function debugableFunction() {
+//   console.trace('Chegou aqui'); // Mostra toda a call stack
+//   const data = await fetchData();
+//   return data;
+// }
+
+// Dica 2: Async Stack Traces no Chrome DevTools
+// Nas versões modernas do Chrome, "Async Stack Traces" já vem habilitado por padrão.
+// Ele permite ver a cadeia completa de chamadas assíncronas,
+// incluindo o contexto antes de cada await.
+
+// Dica 3: Breakpoints estratégicos
+// Coloque breakpoints na linha do await — o debugger pausa antes e depois da operação.
+
+// Dica 4: Logging com timestamps
+function log(message, data) {
+  console.log(`[${new Date().toISOString()}] ${message}`, data ?? '');
+}
+// log('Iniciando fetch', { userId: 123 });
+// log('Fetch completo', { duration: Date.now() - start });
+// timestamps no logging facilitam correlacionar eventos assíncronos

@@ -105,3 +105,40 @@ await demonstraEventLoop();
 //   • Falhar no await deve falhar o app inteiro
 
 console.log('\n✅ event-loop.js executado com sucesso');
+
+// ─────────────────────────────────────────────────────────────
+// JavaScript é single-threaded (seção 2.2)
+// ─────────────────────────────────────────────────────────────
+
+// JavaScript é single-threaded: executa uma linha por vez, sempre na mesma ordem.
+// "Como múltiplas coisas acontecem ao mesmo tempo?" — o Event Loop.
+//
+// Três áreas fundamentais:
+//   Call Stack     : onde o código executa, linha por linha
+//   Task Queue     : callbacks de setTimeout, setInterval, I/O (macrotasks)
+//   Microtask Queue: callbacks de Promises e queueMicrotask
+//
+// Regra de ouro: microtasks (promises) SEMPRE executam antes de macrotasks (setTimeout).
+
+// ─────────────────────────────────────────────────────────────
+// Top-level await: casos de uso legítimos (seção 2.5)
+// ─────────────────────────────────────────────────────────────
+
+// 1. Inicialização de banco de dados:
+// const db = await createConnection(process.env.DATABASE_URL);
+// export default db;
+
+// 2. Carregamento de configuração remota:
+// const config = await fetch('https://config.example.com').then(r => r.json());
+// export const { apiKey, timeout } = config;
+
+// 3. Carregamento dinâmico condicional:
+// const { default: polyfill } = await import('./polyfill.js');
+
+// Quando NÃO usar top-level await:
+// • A operação pode demorar mais de 100 ms
+// • O módulo é usado em testes (dificulta mocks)
+// • Há dependências circulares — pode causar deadlocks
+//
+// Qualquer módulo que importa um módulo com top-level await
+// espera ele carregar completamente antes de continuar.

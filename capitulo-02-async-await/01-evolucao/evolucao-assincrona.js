@@ -122,3 +122,54 @@ console.log('Era 3 (Async/Await): código linear, try/catch natural\n');
 
 const result = await processImage('https://example.com/photo.jpg');
 console.log('processImage() resultado:', result);
+
+// ─────────────────────────────────────────────────────────────
+// Async/await é "açúcar sintático" sobre promises (seção 2.1)
+// ─────────────────────────────────────────────────────────────
+
+// 💡 Async/await é açúcar sintático sobre promises.
+//    Por baixo dos panos, ainda são promises — mas que açúcar delicioso!
+//
+// Esta função:
+//   async function getUser(id) {
+//     const user = await fetchUser(id);
+//     return user.name;
+//   }
+//
+// É equivalente a:
+//   function getUser(id) {
+//     return fetchUser(id).then(user => user.name);
+//   }
+
+// Era 2 — Promises ainda com limitações (seção 2.1):
+// • Ainda não é código linear
+// • Difícil misturar com código síncrono
+// • Depuração complicada
+// • Tentação de criar promise hell — nested .then() dentro de .then()
+
+// ─────────────────────────────────────────────────────────────
+// Caso Real — métricas completas (seção 2.6)
+// ─────────────────────────────────────────────────────────────
+
+// Sistema de processamento de imagens com 8 anos de idade (callbacks pré-históricos).
+// Refatoração real de 2022.
+//
+// Problemas identificados no código original:
+//   • 7 níveis de indentação
+//   • Error handling repetitivo a cada nível
+//   • Impossível de depurar (breakpoints confusos)
+//   • Difícil adicionar novas etapas
+//   • Sem retry nem timeout
+//   • 156 linhas no arquivo real
+//
+// Resultados da refatoração (Callbacks → Async/Await):
+//
+// | Métrica                   | Antes (Callbacks) | Depois (Async/Await)    |
+// |---------------------------|-------------------|-------------------------|
+// | Linhas de código          | 156               | 89 (-43%)               |
+// | Tempo médio processamento | 3,2 s             | 2,8 s (-12%)            |
+// | Taxa de sucesso           | ~95%              | 99,2% (com retry)       |
+// | Depuração por bug         | 2–4 horas         | 15–30 minutos           |
+// | Adicionar nova feature    | 1–2 dias          | 2–4 horas               |
+//
+// De 156 linhas → 35 linhas no arquivo real. Uma redução de 78%.
